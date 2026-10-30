@@ -1,0 +1,17 @@
+const r = require('express').Router();
+const rateLimit = require('express-rate-limit');
+const p = require('../controllers/public');
+const appt = require('../controllers/appointments');
+const upload = require('../config/upload');
+const { optionalMember } = require('../config/auth');
+const post = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, message: { message: 'Too many submissions, please try again later' } });
+r.get('/site', p.site);
+r.get('/pages/:slug', p.page);
+for (const k of ['services', 'packages', 'testimonials', 'team', 'stats', 'why', 'journey', 'faqs', 'blogs', 'jobs']) r.get(`/${k}`, p.list(k));
+for (const k of ['services', 'blogs', 'jobs', 'team']) r.get(`/${k}/:slug`, p.bySlug(k));
+r.get('/appointments/slots', appt.slots);
+r.post('/appointments', post, optionalMember, appt.create);
+r.post('/contact', post, p.contact);
+r.post('/newsletter', post, p.newsletter);
+r.post('/careers/apply', post, optionalMember, upload.resume.single('resume'), p.apply);
+module.exports = r;

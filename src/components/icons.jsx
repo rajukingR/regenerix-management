@@ -1,0 +1,10 @@
+const P = (d, extra = {}) => (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={p.className || 'h-4 w-4'} {...extra}>{d}</svg>
+export const Arrow = P(<path d="M5 12h14M13 6l6 6-6 6" />)
+export const ArrowUR = P(<path d="M7 17 17 7M8 7h9v9" />)
+export const Phone = P(<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />)
+export const Pin = P(<><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z" /><circle cx="12" cy="10" r="2.5" /></>)
+export const Mail = P(<><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>)
+export const Check = P(<path d="m5 12 5 5 9-10" />)
+export const Leaf = P(<path d="M5 19c0-9 5-14 14-14 0 9-5 14-14 14zM5 19l8-8" />)
+export const Chevrons = P(<path d="m8 5 7 7-7 7" />)
+export const Brief = P(<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></>)
