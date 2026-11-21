@@ -71,3 +71,43 @@ Doctor: /api/doctor  GET /dashboard | GET /appointments ?when=today|upcoming|ove
 Member: /api/member  POST /auth/register {name,email,phone,password} | POST /auth/login | GET,PUT /me | PUT /password | GET /dashboard
         GET /appointments[/:id] | GET /applications[/:id] | notifications x4
 Optional env: MEMBER_JWT_EXPIRES (default 7d).
+
+## Clinic management (migration 20260401010000_clinic)
+Run `npm run migrate` once. It only ADDS six tables: `patients`, `consultations`, `treatments`, `treatment_visits`, `clinic_payments`, `expenses`. Nothing existing is changed.
+Admin sidebar -> Clinic: Patients, Consultations, Treatments, Billing, Expenses, Reports. Doctors in these screens are the active rows of Team (`team_members`).
+
+Flow: register a patient (file no `RGX-00001`) -> consultation (`CASE-…`, fee, complaints, doctor's notes, prescription, printable) -> treatment plan (`TRT-…`)
+-> a visit entry per session -> payments (`RCP-…`, printable receipt).
+
+Money rule: charged = consultation fees (not cancelled) + package prices (not cancelled) + per-visit amounts of regular / procedure plans.
+Settled = payments (amount + discount). A payment with no consultation / treatment is an advance and lowers the patient's balance.
+A payment linked to an item cannot exceed what is still due on that item.
+
+API (admin token), /api/admin/clinic:
+        GET /options (doctors, modes) | GET /summary (dashboard cards) | GET /reports ?from&to | GET /dues ?q&page
+        patients       GET ?q&city&due=1|advance&page&limit | POST | GET/:id (file + consultations, treatments, payments) | PUT/:id | DELETE/:id (only when the file is empty) | GET/:id/dues
+        consultations  GET ?q&status&doctor_id&patient_id&date_from&date_to&due=1 | POST | GET/:id | PUT/:id {notes…, status: pending|completed|cancelled} | DELETE/:id
+        treatments     GET ?q&status&service_type&package_type&doctor_id&patient_id&due=1 | POST | GET/:id (with visits + payments) | PUT/:id | DELETE/:id
+                       POST /:id/visits {visit_date, amount?, paid?, mode?, notes?, doctor_id?} | DELETE /:id/visits/:vid
+        payments       GET ?q&mode&patient_id&date_from&date_to | POST {patient_id, consultation_id? | treatment_id?, amount, discount?, mode, paid_on?, note?} | GET/:id (receipt) | DELETE/:id
+        expenses       GET ?q&category&date_from&date_to | POST | PUT/:id | DELETE/:id
+
+## Push notifications (migration 20260501010000_push_tokens)
+Browser push through Firebase Cloud Messaging. Every in-app notification (new booking, doctor assigned, application status…) is also pushed to the browsers
+that account switched on, after the database transaction commits. No extra backend package: `src/config/push.js` signs the service-account JWT with `jsonwebtoken`.
+
+Setup: 1) `npm run migrate` (adds `push_tokens`).  2) Put the Firebase service-account key at `backend/firebase-service-account.json` (git-ignored; never commit it),
+or set `FIREBASE_SERVICE_ACCOUNT=<path>`, or on hosts without a disk put the whole JSON in `FIREBASE_SERVICE_ACCOUNT_JSON`. The server logs "Push notifications: on" at the first use.
+3) Frontend: `npm install` (adds `firebase`). The web config + VAPID key live in `src/portal/push.js` and `public/firebase-messaging-sw.js`.
+Use: bell icon -> "Turn on push notifications for this browser" -> allow -> "Send test". Works on HTTPS and on http://localhost only. Logging out stops pushes to that browser.
+
+API (each portal: /api/admin, /api/doctor, /api/member): GET /push/status | POST /push/register {token} | POST /push/unregister {token} | POST /push/test
+
+## Sending receipts to patients (PDF, email, WhatsApp)
+`npm install` in `backend` adds `pdf-lib` (builds the receipt PDF, `src/config/receiptPdf.js`) and `nodemailer` (Gmail, `src/config/mail.js`).
+`.env`: `EMAIL_USER` (Gmail address) and `EMAIL_PASS` (a Google app password); optional `EMAIL_FROM_NAME`, and `PUBLIC_API_URL` (e.g. https://api.yoursite.com) so the WhatsApp link uses your public address.
+Settings: `whatsapp_country_code` (default 91) is added to 10-digit numbers; `receipt_logo_url` / `logo_url` must be PNG or JPG to appear in the PDF.
+
+Admin: GET /clinic/payments/:id/pdf | GET /clinic/payments/:id/share -> { wa, url, message } | POST /clinic/payments/:id/email { email? }
+Public: GET /api/public/receipts/:id/:token -> the PDF. The token is an HMAC of the receipt made with JWT_SECRET, so links cannot be guessed (changing JWT_SECRET invalidates old links).
+WhatsApp cannot receive a file from a web link, so the button opens the patient's chat with a message containing this private PDF link.

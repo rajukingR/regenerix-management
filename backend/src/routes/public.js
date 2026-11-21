@@ -14,4 +14,6 @@ r.post('/appointments', post, optionalMember, appt.create);
 r.post('/contact', post, p.contact);
 r.post('/newsletter', post, p.newsletter);
 r.post('/careers/apply', post, optionalMember, upload.resume.single('resume'), p.apply);
+// Private link to one payment receipt PDF (sent to the patient over WhatsApp); the token is checked inside
+r.get('/receipts/:id/:token', require('../controllers/receipts').publicPdf);
 module.exports = r;

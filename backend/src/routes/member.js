@@ -15,4 +15,5 @@ r.get('/dashboard', mem.dashboard);
 r.get('/appointments', appt.memberList); r.get('/appointments/:id', appt.memberGet);
 r.get('/applications', apps.memberList); r.get('/applications/:id', apps.memberGet);
 notif.mount(r);
+require('../controllers/push').mount(r, 'member'); // browser push: status / register / unregister / test
 module.exports = r;

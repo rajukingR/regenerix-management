@@ -9,4 +9,5 @@ r.get('/appointments', appt.doctorList);            // ?page&limit&q&status&date
 r.get('/appointments/:id', appt.doctorGet);
 r.put('/appointments/:id', appt.doctorUpdate);      // { status: 'completed' | 'rejected', note }
 notif.mount(r);
+require('../controllers/push').mount(r, 'doctor'); // browser push: status / register / unregister / test
 module.exports = r;

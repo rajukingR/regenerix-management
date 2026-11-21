@@ -1,4 +1,7 @@
 const db = require('../config/db');
+const push = require('../config/push');
+// Browser push goes out only after the surrounding transaction has committed (never for a rolled-back change), and never blocks or fails the request.
+const pushAfter = (trx, audience, ids, type, message, detail) => { Promise.resolve(trx.executionPromise).then(() => push.send(audience, ids, { type, message, detail: detail || {} })).catch(() => {}); };
 const shape = (r) => {
   if (!r) return r;
   if (typeof r.detail === 'string') { try { r.detail = JSON.parse(r.detail); } catch { r.detail = null; } }
@@ -10,17 +13,18 @@ const rows = (ids, audience, type, message, detail, photo) => ids.map((id) => ({
 // All notify* helpers are called INSIDE the transaction that saves the record, so a notification exists if and only if the change was saved.
 exports.notifyAdmins = async (trx, type, message, detail, photo = null) => {
   const admins = await trx('admins').where({ role: 'admin' }).where((q) => q.where({ is_active: 1 }).orWhereNull('is_active')).select('id'); // every admin account; nothing is hard-coded
-  if (admins.length) await trx('notifications').insert(rows(admins.map((a) => a.id), 'staff', type, message, detail, photo));
+  if (admins.length) { await trx('notifications').insert(rows(admins.map((a) => a.id), 'staff', type, message, detail, photo)); pushAfter(trx, 'staff', admins.map((a) => a.id), type, message, detail); }
 };
 // Every active doctor login linked to this team member
 exports.notifyDoctor = async (trx, teamId, type, message, detail, photo = null) => {
   if (!teamId) return;
   const docs = await trx('admins').where({ role: 'doctor', team_id: teamId }).where((q) => q.where({ is_active: 1 }).orWhereNull('is_active')).select('id');
-  if (docs.length) await trx('notifications').insert(rows(docs.map((a) => a.id), 'staff', type, message, detail, photo));
+  if (docs.length) { await trx('notifications').insert(rows(docs.map((a) => a.id), 'staff', type, message, detail, photo)); pushAfter(trx, 'staff', docs.map((a) => a.id), type, message, detail); }
 };
 exports.notifyMember = async (trx, memberId, type, message, detail, photo = null) => {
   if (!memberId) return;
   await trx('notifications').insert(rows([memberId], 'member', type, message, detail, photo));
+  pushAfter(trx, 'member', [memberId], type, message, detail);
 };
 
 const mine = (userId, audience) => db('notifications').where({ user_id: userId, audience });
