@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, ago } from './ui.jsx'
+import { disablePush, enablePush, pushActive, pushPermission, resumePush } from './push.js'
 
 // detail may arrive as an object or as a JSON string; never let a bad value crash the dashboard
 export const parse = (d) => { if (d && typeof d === 'object') return d; try { return JSON.parse(d) || {} } catch { return {} } }
@@ -12,6 +13,11 @@ const subline = (d) => [d.customer_name || d.candidate_name, d.job_title, d.refe
 export default function Bell({ api, base, target, all }) {
   const nav = useNavigate(); const [open, setOpen] = useState(false); const [items, setItems] = useState([]); const [unread, setUnread] = useState(0); const [err, setErr] = useState('')
   const busy = useRef(false); const box = useRef(null)
+  // Browser push: 'unsupported' | 'off' | 'on' | 'denied'
+  const pushState = useCallback(() => { const p = pushPermission(); return p === 'unsupported' || p === 'denied' ? p : pushActive(base) ? 'on' : 'off' }, [base])
+  const [push, setPush] = useState(pushState); const [pushMsg, setPushMsg] = useState(''); const [pushBusy, setPushBusy] = useState(false)
+  useEffect(() => { resumePush(api, base).then(() => setPush(pushState())) }, [api, base, pushState])
+  const pushDo = async (fn, done) => { setPushBusy(true); setPushMsg(''); try { await fn(); setPushMsg(done) } catch (e) { setPushMsg(e.message) } setPush(pushState()); setPushBusy(false) }
   const load = useCallback(async () => {
     if (busy.current) return; busy.current = true // never two requests at once
     try { const d = await api(`${base}/notifications?limit=20`); setItems(d.notifications); setUnread(d.unread_count); setErr('') } catch (e) { setErr(e.message) } finally { busy.current = false }
@@ -44,6 +50,13 @@ export default function Bell({ api, base, target, all }) {
           <span className="block text-xs text-ink/45">{ago(n.created_at)}</span></span>
         {!n.is_read && <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-teal" aria-label="Unread" />}</button></li>) })}
         {!items.length && !err && <li className="px-4 py-10 text-center text-sm text-ink/50">No notifications yet.</li>}</ul>
+      {push !== 'unsupported' && (<div className="border-t border-ink/10 bg-mist/60 px-4 py-2.5 text-xs text-ink/70">
+        {push === 'on' ? <p className="flex flex-wrap items-center gap-x-3 gap-y-1"><span className="flex items-center gap-1.5 font-medium text-teal-dark"><Icon name="checkCircle" className="h-4 w-4" />Push notifications are on for this browser</span>
+            <button disabled={pushBusy} className="font-semibold underline disabled:opacity-50" onClick={() => pushDo(() => api(`${base}/push/test`, { method: 'POST' }), 'Test sent. It should appear in a moment.')}>Send test</button>
+            <button disabled={pushBusy} className="font-semibold underline disabled:opacity-50" onClick={() => pushDo(() => disablePush(api, base), '')}>Turn off</button></p>
+          : push === 'denied' ? <p>Notifications are blocked for this site. Allow them from the lock icon in the address bar to get alerts when this tab is closed.</p>
+          : <button disabled={pushBusy} className="flex w-full items-center gap-2 font-semibold text-teal-dark disabled:opacity-50" onClick={() => pushDo(() => enablePush(api, base), 'Push notifications are on.')}><Icon name="bell" className="h-4 w-4" />{pushBusy ? 'Turning on…' : 'Turn on push notifications for this browser'}</button>}
+        {pushMsg && <p role="status" className="mt-1.5 text-ink/80">{pushMsg}</p>}</div>)}
       {all && <button onClick={() => { setOpen(false); nav(all) }} className="block w-full border-t border-ink/10 py-2.5 text-center text-sm font-medium text-teal-dark hover:bg-mist">View all notifications</button>}</div>)}
   </div>)
 }

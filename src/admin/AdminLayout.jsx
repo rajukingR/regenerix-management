@@ -4,6 +4,7 @@ import { api } from './api.js'
 import { CONTENT, RESOURCES } from './resources.js'
 import NotificationBell from './NotificationBell.jsx'
 import Shell from '../portal/Shell.jsx'
+import { pushLogout } from '../portal/push.js'
 import { clearToken, getToken, setToken, tokenInfo } from '../portal/api.js'
 
 const ICONS = { pages: 'file', 'nav-items': 'menu', sections: 'layers', services: 'steth', packages: 'brief', testimonials: 'mail', team: 'users', stats: 'trend', why: 'checkCircle', journey: 'right', faqs: 'alert', blogs: 'file', jobs: 'brief' }
@@ -16,6 +17,8 @@ export default function AdminLayout() {
   if (info.role === 'doctor') { setToken('doctor', t); clearToken('admin'); return <Navigate to="/doctor" replace /> } // doctor signed in on the admin page
   const groups = [
     { heading: 'Main menu', items: [{ to: '/admin', label: 'Dashboard', icon: 'grid', end: true }] },
+    { heading: 'Clinic', items: [{ to: '/admin/patients', label: 'Patients', icon: 'userCheck' }, { to: '/admin/consultations', label: 'Consultations', icon: 'clipboard' }, { to: '/admin/treatments', label: 'Treatments', icon: 'activity' },
+      { to: '/admin/billing', label: 'Billing', icon: 'receipt' }, { to: '/admin/expenses', label: 'Expenses', icon: 'wallet' }, { to: '/admin/reports', label: 'Reports', icon: 'chart' }] },
     { heading: 'Appointments', items: [{ to: '/admin/appointments', label: 'Appointments', icon: 'calendar' }, { to: '/admin/doctors', label: 'Doctors', icon: 'steth' }] },
     { heading: 'Careers', items: [{ to: '/admin/applications', label: 'Job Applications', icon: 'file' }, { to: '/admin/jobs', label: 'Jobs', icon: 'brief' }] },
     { heading: 'People & inbox', items: [{ to: '/admin/members', label: 'Members', icon: 'users' }, { to: '/admin/inbox/messages', label: 'Messages', icon: 'mail' }, { to: '/admin/inbox/subscribers', label: 'Subscribers', icon: 'inbox' }] },
@@ -24,5 +27,5 @@ export default function AdminLayout() {
   ]
   return <Shell portal={{ key: 'admin', label: 'Admin' }} groups={groups} bottom={[{ to: '/admin/settings', label: 'Settings & account', icon: 'settings' }]}
     user={{ name: me?.name || 'Admin', sub: me?.email, to: '/admin/settings' }} title="Dashboard" bell={<NotificationBell />}
-    onLogout={() => { clearToken('admin'); nav('/admin/login') }} />
+    onLogout={() => { pushLogout(api, '/admin'); clearToken('admin'); nav('/admin/login') }} />
 }

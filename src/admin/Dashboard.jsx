@@ -7,12 +7,25 @@ import { Alert, Card, Icon, Loading, StatCard } from '../portal/ui.jsx'
 export default function Dashboard() {
   const [d, setD] = useState(null); const [me, setMe] = useState(null); const [err, setErr] = useState('')
   const load = () => Promise.all([api('/admin/dashboard'), api('/auth/me')]).then(([x, m]) => { setD(x); setMe(m); setErr('') }).catch((e) => setErr(e.message))
-  useEffect(() => { load() }, [])
+  const [cl, setCl] = useState(null) // clinic figures; stays hidden if the clinic tables are not migrated yet
+  useEffect(() => { load(); api('/admin/clinic/summary').then(setCl).catch(() => {}) }, [])
   if (!d) return err ? <Alert onRetry={load}>{err}</Alert> : <Loading />
   const p = d.portal || {}
   return (<div>
     <h2 className="mb-5 text-2xl font-bold text-ink md:text-[26px]">Welcome back, {me?.name || 'Admin'}!</h2>
     {p.unassigned > 0 && <Link to="/admin/appointments?assigned_to=none" className="mb-5 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><Icon name="steth" className="h-5 w-5 shrink-0" /><span className="flex-1"><b>{p.unassigned}</b> open appointment{p.unassigned === 1 ? ' has' : 's have'} no doctor assigned yet.</span><Icon name="right" className="h-4 w-4" /></Link>}
+    {cl && (<><h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ink/50">Clinic</h3>
+      <div className="mb-6 grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+        <StatCard label="Patients" value={cl.patients} icon="userCheck" to="/admin/patients" hint={cl.today.new_patients ? `${cl.today.new_patients} new today` : undefined} />
+        <StatCard label="Pending Consultations" value={cl.pending_consultations} icon="clipboard" to="/admin/consultations?view=pending" />
+        <StatCard label="Active Treatments" value={cl.active_treatments} icon="activity" to="/admin/treatments?view=active" hint={cl.home_visits ? `${cl.home_visits} home visits` : undefined} />
+        <StatCard label="Payment Due" value={`₹${Number(cl.dues).toLocaleString('en-IN')}`} icon="receipt" to="/admin/billing?view=dues" />
+        <StatCard label="Consultations Today" value={cl.today.consultations} icon="steth" to="/admin/consultations" />
+        <StatCard label="Treatment Visits Today" value={cl.today.visits} icon="calendar" to="/admin/treatments" />
+        <StatCard label="Collected Today" value={`₹${Number(cl.today.collected).toLocaleString('en-IN')}`} icon="wallet" to="/admin/billing" />
+        <StatCard label="Expenses Today" value={`₹${Number(cl.today.expenses).toLocaleString('en-IN')}`} icon="brief" to="/admin/expenses" />
+      </div>
+      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ink/50">Website & appointments</h3></>)}
     <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
       <StatCard label="Total Appointments" value={p.appointments_total} icon="calendar" to="/admin/appointments" />
       <StatCard label="Pending Appointments" value={d.inbox.appointments} icon="clock" to="/admin/appointments?status=pending" />

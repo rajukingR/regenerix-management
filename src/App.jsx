@@ -9,6 +9,12 @@ import Appointments from './admin/Appointments.jsx'
 import Applications from './admin/Applications.jsx'
 import Doctors from './admin/Doctors.jsx'
 import Members from './admin/Members.jsx'
+import Patients, { PatientView } from './admin/clinic/Patients.jsx'
+import Consultations from './admin/clinic/Consultations.jsx'
+import Treatments from './admin/clinic/Treatments.jsx'
+import Billing from './admin/clinic/Billing.jsx'
+import Expenses from './admin/clinic/Expenses.jsx'
+import Reports from './admin/clinic/Reports.jsx'
 import { MemberLogin, StaffLogin } from './portal/Login.jsx'
 import { DoctorAppointments, DoctorHome, DoctorLayout, DoctorNotifications, DoctorProfile } from './doctor/Doctor.jsx'
 import { MemberApplications, MemberAppointments, MemberBook, MemberHome, MemberLayout, MemberNotifications, MemberProfile } from './member/Member.jsx'
@@ -41,6 +47,14 @@ export default function App() {
       <Route path="/admin/login" element={<Login />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
+        {/* Clinic management */}
+        <Route path="patients" element={<Patients />} />
+        <Route path="patients/:id" element={<PatientView />} />
+        <Route path="consultations" element={<Consultations />} />
+        <Route path="treatments" element={<Treatments />} />
+        <Route path="billing" element={<Billing />} />
+        <Route path="expenses" element={<Expenses />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="appointments" element={<Appointments />} />
         <Route path="applications" element={<Applications />} />
         <Route path="doctors" element={<Doctors />} />

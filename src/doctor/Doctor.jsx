@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { clearToken, doctorApi as api, loggedIn } from '../portal/api.js'
 import Shell from '../portal/Shell.jsx'
+import { pushLogout } from '../portal/push.js'
 import Bell, { parse } from '../portal/Bell.jsx'
 import NotificationsPage from '../portal/Notifications.jsx'
 import { APPT_STATUS, Alert, Avatar, Card, DataTable, Detail, Icon, Loading, Modal, PageHead, Pager, Person, Pill, SearchBox, Select, StatCard, Tabs, Toolbar, btn, btn2, btnDanger, fmtDate, fmtDateTime, inp, qs, t12 } from '../portal/ui.jsx'
@@ -21,7 +22,7 @@ export function DoctorLayout() {
   const name = me?.team?.name || me?.name || 'Doctor'
   return <Shell portal={{ key: 'doctor', label: 'Doctor portal' }} groups={groups} bottom={[{ to: '/doctor/profile', label: 'Profile & password', icon: 'settings' }]}
     user={{ name, sub: me?.team?.role, image: me?.team?.image_url, to: '/doctor/profile' }} title="Dashboard"
-    bell={<Bell api={api} base="/doctor" target={target} all="/doctor/notifications" />} onLogout={() => { clearToken('doctor'); nav('/doctor/login') }} />
+    bell={<Bell api={api} base="/doctor" target={target} all="/doctor/notifications" />} onLogout={() => { pushLogout(api, '/doctor'); clearToken('doctor'); nav('/doctor/login') }} />
 }
 
 export function DoctorHome() {

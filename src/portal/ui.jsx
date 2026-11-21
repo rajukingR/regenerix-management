@@ -31,6 +31,11 @@ const P = {
   key: 'M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zM15.5 7.5l3 3L22 7l-3-3',
   inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
   trend: 'M23 6l-9.5 9.5-5-5L1 18M17 6h6v6',
+  clipboard: 'M9 4h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8 5H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 12h6M9 16h4',
+  activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  receipt: 'M5 2v20l3-2 2 2 2-2 2 2 2-2 3 2V2zM9 7h6M9 11h6M9 15h3',
+  wallet: 'M3 7a2 2 0 0 1 2-2h13v4M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2zM17 14h.01',
+  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
 }
 export const Icon = ({ name, className = 'h-5 w-5' }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P[name] || P.grid} /></svg>)

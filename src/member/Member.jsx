@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { clearToken, loggedIn, memberApi as api } from '../portal/api.js'
 import Shell from '../portal/Shell.jsx'
+import { pushLogout } from '../portal/push.js'
 import Bell, { parse } from '../portal/Bell.jsx'
 import NotificationsPage from '../portal/Notifications.jsx'
 import { APPT_STATUS, APP_STATUS, Alert, Avatar, Card, DataTable, Detail, Icon, Loading, Modal, PageHead, Pager, Pill, StatCard, Tabs, ago, btn, btn2, fmtDate, fmtDateTime, inp, qs, t12 } from '../portal/ui.jsx'
@@ -28,7 +29,7 @@ export function MemberLayout() {
   ]
   return <Shell portal={{ key: 'member', label: 'My account' }} groups={groups} bottom={[{ to: '/member/profile', label: 'Profile & password', icon: 'settings' }]}
     user={{ name: me?.name || 'My account', sub: me?.email, to: '/member/profile' }} title="Dashboard" context={{ me, reload }}
-    bell={<Bell api={api} base="/member" target={target} all="/member/notifications" />} onLogout={() => { clearToken('member'); nav('/member/login') }} />
+    bell={<Bell api={api} base="/member" target={target} all="/member/notifications" />} onLogout={() => { pushLogout(api, '/member'); clearToken('member'); nav('/member/login') }} />
 }
 
 export function MemberHome() {

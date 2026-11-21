@@ -68,3 +68,7 @@ pids/
 
 # Optional generated files
 *.tsbuildinfo
+
+# Firebase service account (private key) - never commit
+backend/firebase-service-account*.json
+*firebase-adminsdk*.json
